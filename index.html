@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>退休年龄查询｜上海养老金粗算</title>
+<style>
+  :root{--bg:#f6f4ef;--card:#fff;--text:#262626;--muted:#737373;--line:#e8e4dc;--accent:#dc2347;--soft:#fff0f4;--warn:#8a5b18;}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:520px;margin:0 auto;min-height:100vh;padding:22px 18px 44px}
+  .brand{font-size:13px;color:var(--muted);margin-bottom:28px}.hero h1{font-size:30px;line-height:1.22;margin:0 0 10px}.hero p{font-size:15px;line-height:1.7;color:var(--muted);margin:0 0 24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 8px 26px rgba(0,0,0,.035)}
+  .step{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.08em;margin-bottom:8px}.q{font-size:17px;font-weight:700;margin:12px 0 8px}.hint{font-size:13px;line-height:1.6;color:var(--muted);margin-top:7px}
+  input,select{width:100%;font-size:16px;padding:14px 13px;border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--text);outline:none}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.seg button{border:1px solid var(--line);background:#fff;padding:12px 7px;border-radius:12px;font-size:14px;color:var(--text)}.seg button.active{background:var(--soft);border-color:var(--accent);color:var(--accent);font-weight:700}
+  .btn{width:100%;border:0;border-radius:15px;background:var(--accent);color:#fff;font-size:17px;font-weight:700;padding:15px 18px;margin-top:18px}.btn.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .result-main{font-size:34px;font-weight:800;line-height:1.15;margin:7px 0}.result-sub{font-size:15px;color:var(--muted);line-height:1.65}.big-money{font-size:31px;font-weight:800;margin:8px 0}.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--soft);color:var(--accent);font-size:12px;font-weight:700}
+  .progress{height:10px;background:#efede8;border-radius:999px;overflow:hidden;margin:14px 0 9px}.progress>i{display:block;height:100%;background:var(--accent);border-radius:999px}
+  .mini{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)}
+  details{margin-top:12px} summary{cursor:pointer;color:var(--accent);font-size:14px;font-weight:700}.note{font-size:12px;line-height:1.7;color:var(--muted);margin-top:16px}.warning{background:#fff9ef;border:1px solid #f0dfbd;color:var(--warn);padding:12px;border-radius:12px;font-size:12px;line-height:1.65;margin-top:12px}
+  .hidden{display:none!important}.divider{height:1px;background:var(--line);margin:18px 0}.footer{font-size:11px;color:#929292;line-height:1.7;text-align:center;margin-top:28px}
+
+  .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .poster-wrap{margin-top:14px}
+  .poster-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .poster-actions .btn{margin-top:0;flex:1}
+  .poster-preview{width:100%;display:block;border-radius:16px;border:1px solid var(--line);background:#fff}
+  .tiny{font-size:12px;color:var(--muted);line-height:1.7}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">退休年龄查询 · 上海养老金粗算</div>
+
+  <section id="screen1">
+    <div class="hero">
+      <h1>查退休</h1>
+      <p>先看看，你到底几岁能退休。</p>
+    </div>
+    <div class="card">
+      <div class="q">你的出生年月</div>
+      <input id="birthMonthInput" type="month" min="1965-01" max="2005-12" value="1984-08" />
+
+      <div class="q">你的性别</div>
+      <div class="seg" id="genderType" style="grid-template-columns:1fr 1fr">
+        <button type="button" data-v="female">女</button>
+        <button type="button" data-v="male">男</button>
+      </div>
+
+      <div id="femaleRetireBlock" class="hidden">
+        <div class="q">你原本属于哪类退休年龄？</div>
+        <div class="seg" id="retireType">
+          <button type="button" data-v="50">原50岁</button>
+          <button type="button" data-v="55">原55岁</button>
+          <button type="button" data-v="unknown">不清楚</button>
+        </div>
+        <div class="hint">一般非管理/非技术岗位女性常见为原50岁口径；管理/技术岗位常见为原55岁口径。不确定可以先选“不清楚”。</div>
+      </div>
+
+      <button class="btn" id="calcAge">天呐，我几岁才能退休？</button>
+    </div>
+  </section>
+
+  <section id="screenAge" class="hidden">
+    <div class="card">
+      <span class="pill">退休年龄结果</span>
+      <div class="result-main" id="ageResult">—</div>
+      <div class="result-sub" id="dateResult">—</div>
+      <div class="warning" id="unknownWarning" style="display:none">你选择了“不清楚”。原50岁和原55岁口径的结果会不同，建议确认岗位口径后再看最终退休时间。</div>
+      <div class="divider"></div>
+      <div class="q">还想粗算退休后每月大概能拿多少吗？</div>
+      <div class="hint">打开“随申办”，从“三金账单 → 养老金”里抄两个数字就行。</div>
+      <button class="btn" id="goPension">继续粗算养老金</button>
+      <button class="btn secondary" id="back1">重新查询</button>
+    </div>
+  </section>
+
+  <section id="screen2" class="hidden">
+    <div class="hero">
+      <h1>再抄两个数字</h1>
+      <p>随申办 → 三金账单 → 养老金，或直接搜索“养老金”。</p>
+    </div>
+    <div class="card">
+      <div class="step">STEP 2</div>
+      <div class="q">累计缴费月数</div>
+      <input id="paidMonths" type="number" inputmode="numeric" min="0" max="720" placeholder="例如：177" />
+      <div class="q">养老个人账户本息总额（元）</div>
+      <input id="accountBalance" type="number" inputmode="decimal" min="0" step="100" placeholder="例如：258233" />
+      <details>
+        <summary>这两个数字在哪里看？</summary>
+        <div class="hint">打开随申办 → “三金账单” → “养老金”；也可以直接搜索“养老金”。如果已经能使用“养老保险待遇测算”，请优先参考官方测算结果。</div>
+      </details>
+      <button class="btn" id="calcPension">马上看结果</button>
+      <button class="btn secondary" id="backAge">返回退休年龄</button>
+    </div>
+  </section>
+
+  <section id="screenResult" class="hidden">
+    <div class="card">
+      <span class="pill">你的退休粗算</span>
+      <div class="q">预计退休</div>
+      <div class="result-main" id="finalAge">—</div>
+      <div class="result-sub" id="finalDate">—</div>
+    </div>
+
+    <div class="card">
+      <div class="q">按20年做规划，你还差</div>
+      <div class="result-main" id="gapResult">—</div>
+      <div class="progress"><i id="progressBar" style="width:0%"></i></div>
+      <div class="mini"><span id="paidText">已缴 —</span><span>规划目标 20年</span></div>
+    </div>
+
+    <div class="card">
+      <div class="q">退休后每月养老金粗算</div>
+      <div class="big-money" id="pensionRange">—</div>
+      <div class="result-sub">按“后续以较低档缴至20年后停缴”的简化假设估算，展示区间而非精确值。</div>
+      <div class="warning">这里只做提前规划用的粗算。真实养老金还会受到退休时上海全口径平均工资、本人历年缴费指数、个人账户记账利率等影响。</div>
+    </div>
+
+    <div class="card">
+      <div class="q">已经能用官方测算？</div>
+      <div class="result-sub">随申办搜索“养老保险待遇测算”。如果你符合使用条件，官方结果优先。</div>
+      <div class="cta-grid">
+        <button class="btn" id="makePoster">分享我的测算结果</button>
+        <button class="btn secondary" id="restart">再算一次</button>
+      </div>
+    </div>
+
+    <div class="footer">参数基准：上海2026社保年度公开数据。退休年龄按现行渐进式延迟退休规则估算；20年为本工具保守规划目标，不等同于所有人的当前法定最低缴费年限。</div>
+    <canvas id="shareCanvas" width="1080" height="1920" class="hidden"></canvas>
+  </section>
+
+  <section id="screenShare" class="hidden">
+    <div class="poster-wrap" style="margin-top:0">
+      <img id="posterPreview" class="poster-preview" alt="退休测算分享图预览" />
+    </div>
+    <div class="tiny" style="text-align:center;margin-top:12px">长按图片保存或分享</div>
+  </section>
+</div>
+
+<script>
+const CURRENT_YEAR=2026;
+const SH_AVG_WAGE=12577;      // 2025年度全口径月平均工资，2026社保年度使用
+const SH_MIN_BASE=7546;       // 2026社保缴费基数下限
+const TARGET_MONTHS=240;      // V1规划目标：20年
+let genderType=null, retireType=null, lastRetire=null;
+
+const birthMonthInput=document.getElementById('birthMonthInput');
+
+document.querySelectorAll('#genderType button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#genderType button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  genderType=b.dataset.v;
+
+  const femaleBlock=document.getElementById('femaleRetireBlock');
+  if(genderType==='male'){
+    femaleBlock.classList.add('hidden');
+    retireType='60';
+    document.querySelectorAll('#retireType button').forEach(x=>x.classList.remove('active'));
+  }else{
+    femaleBlock.classList.remove('hidden');
+    retireType=null;
+    document.querySelectorAll('#retireType button').forEach(x=>x.classList.remove('active'));
+  }
+}));
+
+document.querySelectorAll('#retireType button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#retireType button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); retireType=b.dataset.v;
+}));
+
+function monthsBetween(y1,m1,y2,m2){ return (y2-y1)*12+(m2-m1); }
+function addMonths(y,m,delta){ let idx=y*12+(m-1)+delta; return {y:Math.floor(idx/12),m:(idx%12)+1}; }
+function retirementFor(y,m,type){
+  // 现行规则：原50岁女性自1975-01起每2个月延迟1个月，最多延迟60个月；原55岁女性自1970-01起每4个月延迟1个月，最多36个月。
+  let baseAge, delay=0;
+  if(type==='50'){
+    baseAge=50;
+    if(y>1974){ const n=monthsBetween(1975,1,y,m); delay=Math.min(60,Math.floor(n/2)+1); }
+  }else if(type==='55'){
+    baseAge=55;
+    if(y>1969){ const n=monthsBetween(1970,1,y,m); delay=Math.min(36,Math.floor(n/4)+1); }
+  }else if(type==='60'){
+    baseAge=60;
+    if(y>1964){ const n=monthsBetween(1965,1,y,m); delay=Math.min(36,Math.floor(n/4)+1); }
+  }else{
+    return null;
+  }
+  const ageMonths=baseAge*12+delay;
+  const r=addMonths(y,m,ageMonths);
+  return {ageYears:Math.floor(ageMonths/12), ageMonths:ageMonths%12, year:r.y, month:r.m, totalAgeMonths:ageMonths};
+}
+function fmtAge(r){ return r.ageYears+'岁'+(r.ageMonths? r.ageMonths+'个月':''); }
+function show(id){ ['screen1','screenAge','screen2','screenResult','screenShare'].forEach(x=>document.getElementById(x).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function calcAge(){
+  if(!birthMonthInput.value){ alert('先选择出生年月'); return; }
+  if(!genderType){ alert('先选一下性别'); return; }
+  if(genderType==='female' && !retireType){ alert('再选一下原50岁、原55岁或不清楚'); return; }
+  const [y,m]=birthMonthInput.value.split('-').map(Number);
+  if(retireType==='unknown'){
+    const a=retirementFor(y,m,'50'), b=retirementFor(y,m,'55');
+    document.getElementById('ageResult').textContent=fmtAge(a)+' / '+fmtAge(b);
+    document.getElementById('dateResult').textContent=`原50岁口径：${a.year}年${a.month}月；原55岁口径：${b.year}年${b.month}月`;
+    document.getElementById('unknownWarning').style.display='block';
+    lastRetire={unknown:true,a,b,y,m};
+  }else{
+    const r=retirementFor(y,m,retireType);
+    document.getElementById('ageResult').textContent=fmtAge(r);
+    document.getElementById('dateResult').textContent=`预计退休时间：${r.year}年${r.month}月`;
+    document.getElementById('unknownWarning').style.display='none';
+    lastRetire={unknown:false,r,y,m};
+  }
+  show('screenAge');
+}
+
+document.getElementById('calcAge').onclick=calcAge;
+document.getElementById('goPension').onclick=()=>{
+  if(lastRetire?.unknown){ alert('粗算养老金前，建议先确认自己属于原50岁还是原55岁退休口径。'); return; }
+  show('screen2');
+};
+document.getElementById('back1').onclick=()=>show('screen1');
+document.getElementById('backAge').onclick=()=>show('screenAge');
+
+function annuityMonths(ageYears){
+  const map={50:195,51:190,52:185,53:180,54:175,55:170,56:164,57:158,58:152,59:145,60:139,61:132,62:125,63:117,64:109,65:101,66:93,67:84,68:75,69:65,70:56};
+  return map[Math.max(50,Math.min(70,Math.floor(ageYears)))]||170;
+}
+function yearsUntil(y,m){ const nowY=2026, nowM=9; return Math.max(0, monthsBetween(nowY,nowM,y,m)/12); }
+function compound(value,annual,years){ return value*Math.pow(1+annual,years); }
+
+function roughPension(paidMonths,balance,r){
+  const gap=Math.max(0,TARGET_MONTHS-paidMonths);
+  const yrsToRet=yearsUntil(r.year,r.month);
+  const yrsContrib=Math.min(gap/12,yrsToRet);
+
+  // 以当前账户余额/累计月份形成一个“缴费水平代理值”。这是为了少填资料，不等同于官方平均缴费指数。
+  const proxyBase = paidMonths>0 ? (balance/paidMonths/0.08) : SH_MIN_BASE;
+  const proxyIndex = Math.max(0.6,Math.min(2.2,proxyBase/SH_AVG_WAGE));
+
+  function scenario(wageGrowth,accountRate,indexFactor){
+    const index=Math.max(0.6,Math.min(2.5,proxyIndex*indexFactor));
+    const retWage=compound(SH_AVG_WAGE,wageGrowth,yrsToRet);
+    const foundation=retWage*(1+index)/2*(TARGET_MONTHS/12)*0.01;
+
+    // 未来按最低档缴至20年：个人账户每月计入缴费基数8%；最低基数随工资同速增长。
+    let acct=balance;
+    let monthsToRet=Math.round(yrsToRet*12);
+    let contribMonths=Math.min(gap,monthsToRet);
+    for(let i=0;i<monthsToRet;i++){
+      acct*=Math.pow(1+accountRate,1/12);
+      if(i<contribMonths){
+        const t=i/12;
+        const base=SH_MIN_BASE*Math.pow(1+wageGrowth,t);
+        acct+=base*0.08;
+      }
+    }
+    const personal=acct/annuityMonths(r.ageYears);
+    return foundation+personal;
+  }
+  const low=scenario(0.015,0.02,0.82);
+  const high=scenario(0.035,0.035,1.08);
+  return {low,high,gap,proxyIndex};
+}
+function round100(x){return Math.max(0,Math.round(x/100)*100)}
+function gapText(g){ if(g<=0)return '已经达到20年'; const y=Math.floor(g/12),m=g%12; return (y?y+'年':'')+(m?m+'个月':''); }
+
+document.getElementById('calcPension').onclick=()=>{
+  const pm=+document.getElementById('paidMonths').value;
+  const bal=+document.getElementById('accountBalance').value;
+  if(!Number.isFinite(pm)||pm<=0||!Number.isFinite(bal)||bal<=0){ alert('请把两个随申办数字填完整'); return; }
+  const r=lastRetire.r;
+  const out=roughPension(pm,bal,r);
+  document.getElementById('finalAge').textContent=fmtAge(r);
+  document.getElementById('finalDate').textContent=`预计退休时间：${r.year}年${r.month}月`;
+  document.getElementById('gapResult').textContent=gapText(out.gap);
+  document.getElementById('paidText').textContent=`已缴 ${Math.floor(pm/12)}年${pm%12?pm%12+'个月':''}`;
+  document.getElementById('progressBar').style.width=Math.min(100,pm/TARGET_MONTHS*100)+'%';
+  document.getElementById('pensionRange').textContent=`约 ¥${round100(out.low).toLocaleString()}～${round100(out.high).toLocaleString()} / 月`;
+  show('screenResult');
+};
+
+function drawRoundedRect(ctx,x,y,w,h,r,fill,stroke){
+  const rr = Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+  if(fill){ ctx.fillStyle=fill; ctx.fill(); }
+  if(stroke){ ctx.strokeStyle=stroke; ctx.stroke(); }
+}
+function wrapText(ctx,text,x,y,maxWidth,lineHeight,color,font){
+  ctx.fillStyle = color; if(font) ctx.font=font;
+  const chars = text.split(''); let line=''; let yy=y;
+  for(let i=0;i<chars.length;i++){
+    const test=line+chars[i];
+    if(ctx.measureText(test).width>maxWidth && line){ ctx.fillText(line,x,yy); line=chars[i]; yy+=lineHeight; }
+    else line=test;
+  }
+  if(line) ctx.fillText(line,x,yy);
+  return yy;
+}
+function qrUrl(){
+  const target = location.href.split('#')[0];
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data='+encodeURIComponent(target);
+}
+async function loadImage(src){
+  return await new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload=()=>resolve(img); img.onerror=reject; img.src=src;
+  });
+}
+async function generatePoster(){
+  const canvas = document.getElementById('shareCanvas');
+  canvas.width = 1080; canvas.height = 1440;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.fillStyle = '#fbf7f2'; ctx.fillRect(0,0,W,H);
+
+  const fontFamily='-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif';
+  const finalAge = document.getElementById('finalAge').textContent || '54岁10个月';
+  const finalDate = (document.getElementById('finalDate').textContent || '预计退休时间：2039年6月').replace('预计退休时间：','');
+  const gap = document.getElementById('gapResult').textContent || '5年3个月';
+  let money = document.getElementById('pensionRange').textContent || '约 ¥4,500～5,200 / 月';
+  money = money.replace(/\s+/g,' ').trim();
+
+  // headline
+  ctx.fillStyle='#1f1f1f'; ctx.font=`800 64px ${fontFamily}`;
+  ctx.textAlign='center';
+  ctx.fillText('我什么时候退休？能领多少钱？',W/2,110);
+  ctx.fillStyle='#555'; ctx.font=`500 34px ${fontFamily}`;
+  ctx.fillText('先查退休年龄，顺手粗算一下养老金',W/2,168);
+  ctx.fillStyle='#777'; ctx.font=`400 24px ${fontFamily}`;
+  ctx.fillText('退休年龄全国适用｜养老金粗算为上海版',W/2,212);
+
+  // main white card
+  drawRoundedRect(ctx,70,255,W-140,560,36,'#ffffff','#eee8df');
+  drawRoundedRect(ctx,105,285,210,58,29,'#fff0f4');
+  ctx.textAlign='left'; ctx.fillStyle='#dc2347'; ctx.font=`700 27px ${fontFamily}`;
+  ctx.fillText('示例查询结果',140,323);
+
+  // retirement row
+  ctx.fillStyle='#222'; ctx.font=`700 38px ${fontFamily}`;
+  ctx.fillText('预计退休：',120,410);
+  ctx.fillStyle='#dc2347'; ctx.font=`800 72px ${fontFamily}`;
+  ctx.fillText(finalAge,390,420);
+  ctx.fillStyle='#777'; ctx.font=`400 28px ${fontFamily}`;
+  ctx.fillText('预计退休时间：'+finalDate,390,468);
+
+  // divider
+  ctx.fillStyle='#eee8df'; ctx.fillRect(120,505,W-240,2);
+
+  // gap row
+  ctx.fillStyle='#222'; ctx.font=`700 36px ${fontFamily}`;
+  ctx.fillText('距离20年还差：',120,590);
+  ctx.fillStyle='#dc2347'; ctx.font=`800 62px ${fontFamily}`;
+  ctx.fillText(gap,430,598);
+  ctx.fillStyle='#eee8df'; ctx.fillRect(120,640,W-240,2);
+
+  // pension row
+  ctx.fillStyle='#222'; ctx.font=`700 36px ${fontFamily}`;
+  ctx.fillText('养老金粗算：',120,730);
+  ctx.fillStyle='#dc2347'; ctx.font=`800 52px ${fontFamily}`;
+  ctx.fillText(money,360,735);
+  ctx.fillStyle='#eee8df'; ctx.fillRect(120,775,W-240,2);
+  ctx.fillStyle='#777'; ctx.font=`400 26px ${fontFamily}`;
+  ctx.textAlign='center'; ctx.fillText('打开随申办，抄两个数字就能查',W/2,805);
+
+  // button label
+  drawRoundedRect(ctx,335,860,410,92,46,'#dc2347');
+  ctx.fillStyle='#fff'; ctx.font=`800 42px ${fontFamily}`;
+  ctx.textAlign='center'; ctx.fillText('扫码测一测',W/2,920);
+
+  // qr
+  try{
+    const qr = await loadImage(qrUrl());
+    ctx.fillStyle='#fff'; ctx.fillRect(355,985,370,370);
+    ctx.drawImage(qr,375,1005,330,330);
+  }catch(e){
+    ctx.fillStyle='#fff'; ctx.fillRect(355,985,370,370);
+    ctx.fillStyle='#999'; ctx.font=`400 24px ${fontFamily}`; ctx.fillText('二维码加载失败',W/2,1180);
+  }
+
+  ctx.fillStyle='#888'; ctx.font=`400 25px ${fontFamily}`;
+  ctx.fillText('@苏三的中年慢出发（小红书、公众号）',W/2,1390);
+
+  const dataUrl = canvas.toDataURL('image/png');
+  const img = document.getElementById('posterPreview');
+  img.src = dataUrl;
+  show('screenShare');
+  return dataUrl;
+}
+let generatedPosterUrl = null;
+document.getElementById('makePoster').onclick = async ()=>{
+  const btn = document.getElementById('makePoster');
+  const old = btn.textContent; btn.textContent='正在分享我的测算结果...'; btn.disabled=true;
+  try{ generatedPosterUrl = await generatePoster(); btn.textContent='重新分享我的测算结果'; }
+  catch(e){ alert('分享图生成失败，请再试一次'); btn.textContent=old; }
+  btn.disabled=false;
+};
+document.getElementById('restart').onclick=()=>show('screen1');
+</script>
+</body>
+</html>
